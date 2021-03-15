@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_ON, STATE_OFF
-from homeassistant.components.light import Light, SUPPORT_BRIGHTNESS
+from homeassistant.components.light import LightEntity, SUPPORT_BRIGHTNESS
 
 from .helpers import setup_platform, BrowserModEntity
 
@@ -11,7 +11,12 @@ PLATFORM = 'light'
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return setup_platform(hass, config, async_add_devices, PLATFORM, BrowserModLight)
 
-class BrowserModLight(Light, BrowserModEntity):
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    await async_setup_platform(hass, {}, async_add_entities)
+
+
+class BrowserModLight(LightEntity, BrowserModEntity):
     domain = PLATFORM
 
     def __init__(self, hass, connection, deviceID, alias=None):
@@ -47,6 +52,10 @@ class BrowserModLight(Light, BrowserModEntity):
         if self.data.get('brightness', False):
             return SUPPORT_BRIGHTNESS
         return 0
+
+    @property
+    def brightness(self):
+        return self.data.get('brightness', None)
 
     def turn_on(self, **kwargs):
         self.connection.send("no-blackout", **kwargs)
